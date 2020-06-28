@@ -10,36 +10,41 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.cluster import KMeans
 import numpy as np
 from pandas import DataFrame
+import csv
+from scipy.spatial.distance import cdist
 
-# nltk.download('stopwords')
-# stopwords.words('english')
-#
-response = requests.get('http://10.25.130.230:8080/about.html')
+fp = open('input.csv','r')
+reader = csv.reader(fp)
+lst = [i[0] for i in reader]
 
-html = response.text
-
-soup = BeautifulSoup(html,'html.parser')
-
-text = soup.get_text(strip=True)
+# 构造特殊句子锁定最佳cluster part1
+lst.append('fuck in the hell~')
 
 # 分句
-X_Org = sent_tokenize(text,'english')
+# X_Org = sent_tokenize(lst,'english')
 # print(X_Org)
 
 # 矢量化
 vectorizer = CountVectorizer()
-X = vectorizer.fit_transform(X_Org)
+X = vectorizer.fit_transform(lst)
 transformer = TfidfTransformer()
 tfidf = transformer.fit_transform(X)
 weight = tfidf.toarray()
 
 # 聚类
-kmeans = KMeans(n_clusters=3).fit(weight)
+kmeans = KMeans(n_clusters=14).fit(weight)
 labels = kmeans.labels_
-result = DataFrame({'category':labels,'sentence':X_Org})
-grouped = result.groupby('category')
-for name,group in grouped:
-    print (name)
-    print (group.iloc[0])
+result = DataFrame({'category':labels,'sentence':lst})
+
+# 构造特殊句子锁定最佳cluster part2
+a1 = result.query('sentence== "fuck in the hell~"')['category'].iat[0]
+if len(result[result.category == a1]) < 2:
+    print(result.sort_values(by='category'))
+
+# groups方式输出
+# grouped = result.groupby('category')
+# for name,group in grouped:
+#     print (name)
+#     print (group.iloc[0])
 
 
