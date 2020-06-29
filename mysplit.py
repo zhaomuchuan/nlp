@@ -10,6 +10,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.cluster import KMeans
 import numpy as np
 from pandas import DataFrame
+import pandas as pd
 import csv
 from scipy.spatial.distance import cdist
 
@@ -32,14 +33,19 @@ tfidf = transformer.fit_transform(X)
 weight = tfidf.toarray()
 
 # 聚类
-kmeans = KMeans(n_clusters=14).fit(weight)
-labels = kmeans.labels_
-result = DataFrame({'category':labels,'sentence':lst})
+n_target = int(len(weight)/5)
+for n in range(n_target-3, n_target+3):
+    kmeans = KMeans(n_clusters=n).fit(weight)
+    labels = kmeans.labels_
+    result = DataFrame({'category':labels,'sentence':lst})
+    pd.set_option('display.max_rows', None)
 
-# 构造特殊句子锁定最佳cluster part2
-a1 = result.query('sentence== "fuck in the hell~"')['category'].iat[0]
-if len(result[result.category == a1]) < 2:
-    print(result.sort_values(by='category'))
+    # 构造特殊句子锁定最佳cluster part2
+    a1 = result.query('sentence== "fuck in the hell~"')['category'].iat[0]
+    if len(result[result.category == a1]) < 2:
+        print(n)
+        print(result.sort_values(by='category'))
+        break
 
 # groups方式输出
 # grouped = result.groupby('category')
